@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta charset="UTF-8">
+    <title>WebAR Kanser Projesi</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        #ui {
+            position: absolute; z-index: 999; bottom: 20px; left: 50%;
+            transform: translateX(-50%); text-align: center; width: 100%;
+        }
+        button {
+            padding: 15px 30px; font-size: 18px; background: #ff4757;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+        }
+        #debug-log {
+            position: absolute; top: 10px; left: 10px; color: lime;
+            background: rgba(0,0,0,0.5); font-size: 10px; z-index: 1000;
+            pointer-events: none; padding: 5px;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-log">Sistem başlatılıyor...</div>
+
+    <div id="ui">
+        <button id="startButton">Deneyimi Başlat</button>
+    </div>
+
+    <a-scene 
+        mindar-image="imageTargetSrc: ./kanser/kanser.mind; autoStart: false; uiScanning: no;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <video id="kanserVideo" 
+                   src="./kanser/kanser.mp4" 
+                   preload="auto" 
+                   loop="true" 
+                   muted="true" 
+                   playsinline 
+                   webkit-playsinline 
+                   crossorigin="anonymous">
+            </video>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity id="target" mindar-image-target="targetIndex: 0">
+            <a-video src="#kanserVideo" width="1" height="0.56" position="0 0 0"></a-video>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const log = (msg) => { document.getElementById('debug-log').innerText += "\n" + msg; };
+        const video = document.querySelector('#kanserVideo');
+        const startButton = document.querySelector('#startButton');
+        const sceneEl = document.querySelector('a-scene');
+
+        // 1. "Deneyimi Başlat" butonu videoyu tetikler
+        startButton.addEventListener('click', () => {
+            log("Butona basıldı.");
+            // MindAR'ı elle başlatıyoruz
+            const arSystem = sceneEl.systems["mindar-image-system"];
+            arSystem.start(); 
+            
+            // Videoyu tarayıcıya tanıtıp hazırlıyoruz
+            video.play().then(() => {
+                video.pause();
+                log("Video hazır ve duraklatıldı.");
+            }).catch(e => log("Video hatası: " + e));
+
+            startButton.classList.add('hidden');
+        });
+
+        // 2. Okutma başarılı olduğunda
+        const target = document.querySelector('#target');
+        target.addEventListener("targetFound", () => {
+            log("HEDEF BULUNDU!");
+            video.play().then(() => {
+                log("Video oynatılıyor...");
+            }).catch(e => log("Oynatma hatası: " + e));
+        });
+
+        target.addEventListener("targetLost", () => {
+            log("Hedef kaybedildi.");
+            video.pause();
+        });
+
+        // Video dosyasının yüklenip yüklenmediğini kontrol et
+        video.addEventListener('error', (e) => {
+            log("VİDEO DOSYASI BULUNAMADI VEYA HATALI!");
+        });
+    </script>
+</body>
+</html>
