@@ -45,7 +45,6 @@
                    src="./kanser/kanser.mp4" 
                    preload="auto" 
                    loop="true" 
-                   muted="true" 
                    playsinline 
                    webkit-playsinline 
                    crossorigin="anonymous">
@@ -65,28 +64,30 @@
         const startButton = document.querySelector('#startButton');
         const sceneEl = document.querySelector('a-scene');
 
-        // 1. "Deneyimi Başlat" butonu videoyu tetikler
         startButton.addEventListener('click', () => {
             log("Butona basıldı.");
-            // MindAR'ı elle başlatıyoruz
+            
+            // MindAR'ı başlat
             const arSystem = sceneEl.systems["mindar-image-system"];
             arSystem.start(); 
             
-            // Videoyu tarayıcıya tanıtıp hazırlıyoruz
+            // Kullanıcı butona bastığı an ses kilidini açıyoruz
+            video.muted = false; 
+            
             video.play().then(() => {
-                video.pause();
-                log("Video hazır ve duraklatıldı.");
-            }).catch(e => log("Video hatası: " + e));
+                video.pause(); // Görsel bulunana kadar beklet
+                log("Ses kilidi açıldı ve video hazır.");
+            }).catch(e => log("Hata: " + e));
 
             startButton.classList.add('hidden');
         });
 
-        // 2. Okutma başarılı olduğunda
         const target = document.querySelector('#target');
         target.addEventListener("targetFound", () => {
             log("HEDEF BULUNDU!");
+            video.muted = false; // Sesin açık olduğundan emin ol
             video.play().then(() => {
-                log("Video oynatılıyor...");
+                log("Video SESLİ oynatılıyor...");
             }).catch(e => log("Oynatma hatası: " + e));
         });
 
@@ -95,9 +96,8 @@
             video.pause();
         });
 
-        // Video dosyasının yüklenip yüklenmediğini kontrol et
         video.addEventListener('error', (e) => {
-            log("VİDEO DOSYASI BULUNAMADI VEYA HATALI!");
+            log("VİDEO DOSYASI HATASI!");
         });
     </script>
 </body>
